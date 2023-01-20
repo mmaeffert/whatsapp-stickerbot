@@ -1,0 +1,17 @@
+{
+  "name": "stickerbot",
+  "version": "1.0.0",
+  "description": "A bot that receives sticker from customers and saves them for a later point in the purchase process. usable for woocommerce",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "max maeffert",
+  "license": "ISC",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "js-sha256": "^0.9.0",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.19.2"
+  }
+}

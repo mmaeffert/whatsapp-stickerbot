@@ -1,0 +1,6 @@
+{
+    "sticker-path":"D:/code/stickerbot/kama-sticker-uploads/",
+    "meme-path":"D:/code/stickerbot/memes/",
+    "approved-memes": "D:/code/stickerbot/approved-memes/",
+    "approver-secret": "stuhl"
+}

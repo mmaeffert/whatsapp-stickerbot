@@ -3,14 +3,53 @@ const WAWebJS = require('whatsapp-web.js');
 const fs = require("fs")
 const waSession = require("./session")
 const sha = require('js-sha256');
-
 const { Client, MessageMedia } = require('whatsapp-web.js');
 const client = new Client();
 const Message = WAWebJS.Message;
-
 const CONFIG = require('./config.json');
 
+// contains info about each message author
 let sessions = {}
+
+
+
+
+// When user asks for a meme
+async function approveMeme(message){
+
+    if(sessions[message.from].role != "approver"){
+        message.reply("Du bist kein meme approver. Frage den Admin nach dem Passwort")
+        return null;
+    }
+
+    fs.readdir(CONFIG['meme-path'], (err, files) => {
+        if(files.length == 0){
+            client.sendMessage(message.from, "Danke bro, aber es gibt aktuell keine memes zum approven")
+            return null;
+        }
+        client.sendMessage(message.from, MessageMedia.fromFilePath(CONFIG['meme-path'] + files[0]))
+        client.sendMessage(message.from, files[0].slice(0, -4))
+    });
+}
+
+
+
+
+// When user sends a text string that is not predefined like "n" or "y"
+async function handleCode(message){
+    
+    // Checks if folder exists
+    if(!fs.existsSync(CONFIG['sticker-path'] + message.body)){
+        client.sendMessage(message.from, "Wir haben keine Bestellung gefunden. Besuche https://www.stickemup.de um deinen Code zu erhalten")
+        return null;
+    }
+
+    console.log("Folder created: " + message.body)
+    client.sendMessage(message.from, "Wir haben deinen Code gefunden, du kannst jetzt deine Sticker senden");
+    sessions[message.from].role = "active"
+    sessions[message.from].code = message.body
+    sessions[message.from].status = "open"
+}
 
 
 
@@ -35,6 +74,15 @@ function isCode(_code){
 
 
 
+// Opens a session for a user if it does not exist yet
+function initSession(author){
+    if(!sessions[author]){
+        sessions[author] = new waSession.WASession("000000", "init", "default")
+    }
+}
+
+
+
 
 // When user sends an image
 async function evalImage(message){
@@ -54,26 +102,6 @@ async function evalImage(message){
     } catch {
         message.reply("❎ Fehlgeschlagen!")
     }
-}
-
-
-
-// When user asks for a meme
-async function approveMeme(message){
-
-    if(sessions[message.from].role != "approver"){
-        message.reply("Du bist kein meme approver. Frage den Admin nach dem Passwort")
-        return null;
-    }
-
-    fs.readdir(CONFIG['meme-path'], (err, files) => {
-        if(files.length == 0){
-            client.sendMessage(message.from, "Danke bro, aber es gibt aktuell keine memes zum approven")
-            return null;
-        }
-        client.sendMessage(message.from, MessageMedia.fromFilePath(CONFIG['meme-path'] + files[0]))
-        client.sendMessage(message.from, files[0].slice(0, -4))
-    });
 }
 
 
@@ -118,63 +146,6 @@ async function handleMemeApproval(message){
 
 
 
-
-// When user sends a text string that is not predefined like "n" or "y"
-async function evalText(message){
-
-    // User reacted to a meme
-    if(message.body == "y" || message.body == "n"){
-        handleMemeApproval(message);
-        return null;
-    }
-
-    // User elevates to approver
-    if(message.body == CONFIG['approver-secret']){
-        sessions[message.from].role = "approver"
-        client.sendMessage(message.from, "Du bist jetzt meme approver. Schreibe 'meme' um memes zu erhalten. ANTWORTE AUF DEN CODE DER NACH DEM MEME KOMMT ein meme mit 'y' für approve und 'n' zum löschen")
-        return null;
-    }
-
-    // User wants to approve meme
-    if(message.body == "meme"){
-        approveMeme(message)
-        return null;
-    }
-
-    // Checks if it's a valid code
-    if(!isCode(message.body)){
-        client.sendMessage(message.from, "Starte deine Bestellung bitte mit dem 6-stelligen Code, der dir auf der Website angezeigt wird")
-        return null;
-    }
-    
-    // Checks if folder exists
-    if(!fs.existsSync(CONFIG['sticker-path'] + message.body)){
-        client.sendMessage(message.from, "Wir haben keine Bestellung gefunden. Besuche https://www.stickemup.de um deinen Code zu erhalten")
-        return null;
-    }
-
-    console.log("Folder created: " + message.body)
-    client.sendMessage(message.from, "Wir haben deinen Code gefunden, du kannst jetzt deine Sticker senden");
-    sessions[message.from].role = "active"
-    sessions[message.from].code = message.body
-    sessions[message.from].status = "open"
-}
-
- 
-
-
-
-
-function initSession(author){
-    if(!sessions[author]){
-        sessions[author] = new waSession.WASession("000000", "init", "default")
-    }
-}
-
-
-
-
-
 // When user sends a sticker
 async function evalSticker(message){
     
@@ -210,6 +181,41 @@ async function evalSticker(message){
 
 
 
+// Elevates a user to meme approver. The user then can use the "meme" command
+function elevateUser(message){
+    sessions[message.from].role = "approver"
+    client.sendMessage(message.from, "Du bist jetzt meme approver. Schreibe 'meme' um memes zu erhalten. ANTWORTE AUF DEN CODE DER NACH DEM MEME KOMMT ein meme mit 'y' für approve und 'n' zum löschen")
+    return null;
+}
+
+
+
+// Place your commands here and link it to a function
+const router = {
+    "meme": approveMeme,
+    "y": handleMemeApproval,
+    "n": handleMemeApproval,
+    "sticker": evalSticker,
+    "image": evalImage,
+}
+
+
+
+
+
+// Dispatches the command to the according function
+function dispatcher(message){
+
+    if(router[message.body]) return router[message.body](message)
+    if(router[message.type]) return router[message.type](message)
+    if(isCode(message.body)) return handleCode(message)
+    if(message.body == CONFIG["approver-secret"]) return elevateUser(message)
+    client.sendMessage(message.from, "Starte deine Bestellung bitte mit dem 6-stelligen Code, der dir auf der Website angezeigt wird")
+
+}
+
+
+
 
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
@@ -219,27 +225,11 @@ client.on('ready', () => {
     console.log('Client is ready!');
 });
 
-
-
-
-
-
 // HIER WIRD DIR NACHRICHT ABGEFANGEN
 client.on('message',  message => {
     console.log("NEW MESSAGE from " + message.from + " with type " + message.type + ": '" + message.body + "'")
     initSession(message.from)
-
-    if(!message.hasMedia){
-        evalText(message)
-    }
-
-    if(message.type == "sticker"){
-        evalSticker(message)
-    }
-
-    if(message.type == "image"){
-        evalImage(message)
-    }
+    dispatcher(message)
 });
 
 client.initialize();

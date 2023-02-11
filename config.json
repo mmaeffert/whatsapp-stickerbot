@@ -1,7 +1,9 @@
 {
-    "sticker-path":"D:/code/stickerbot/kama-sticker-uploads/",
-    "meme-path":"D:/code/stickerbot/memes/",
-    "approved-memes": "D:/code/stickerbot/approved-memes/",
+    "base-path": "F:/code/stickerbot/",
+    "sticker-path":"kama-sticker-uploads/",
+    "meme-path":"memes/",
+    "sticker-file-location": "whatsapp-sticker/",
+    "approved-memes": "approved-memes/",
     "approver-secret": "stuhl",
     "help-command": "Um Sticker deiner Bestellung hinzuzufügen, sende uns den 6-stelligen code, der dir auf der Website angezeigt wird. Danach kannst du die Sticker in den Chat spamen und sie werden deiner Bestellung zugeordnet. Keine Sorge, solltest du Sticker aus versehen geschickt haben, kannst du sie im nächsten Schritt auf der Website wieder entfernen\nAlternativ kannst du uns memes einsenden, die dann potentiell in Stickerpacks landen.\n Sende uns Bilder mit dem titel \"sticker\" und wir senden dir dein Bild als Sticker zurück"
 }

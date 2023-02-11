@@ -7,6 +7,7 @@ const { Client, MessageMedia } = require('whatsapp-web.js');
 const client = new Client();
 const Message = WAWebJS.Message;
 const CONFIG = require('./config.json');
+const path = require('path');
 
 // contains info about each message author
 let sessions = {}
@@ -32,23 +33,30 @@ async function approveMeme(message){
     });
 }
 
-
-
-
 // When user sends a text string that is not predefined like "n" or "y"
 async function handleCode(message){
     
+    const dir = CONFIG['base-path'] + CONFIG['sticker-path'] + message.body
+    
     // Checks if folder exists
-    if(!fs.existsSync(CONFIG['sticker-path'] + message.body)){
+    if(!fs.existsSync(CONFIG['base-path'] + CONFIG['sticker-path'] + message.body)){
         client.sendMessage(message.from, "Wir haben keine Bestellung gefunden. Besuche https://www.stickemup.de um deinen Code zu erhalten")
         return null;
     }
 
-    console.log("Folder created: " + message.body)
-    client.sendMessage(message.from, "Wir haben deinen Code gefunden, du kannst jetzt deine Sticker senden");
+    const sessionWasUsedBefore = (fs.readdirSync(dir + "/" + CONFIG['sticker-file-location']).length != "")
+
+    
     sessions[message.from].role = "active"
     sessions[message.from].code = message.body
     sessions[message.from].status = "open"
+
+    if(!sessionWasUsedBefore){
+        client.sendMessage(message.from, "Wir haben deinen Code gefunden, du kannst jetzt deine Sticker senden");
+        return;     
+    }
+
+    client.sendMessage(message.from, "Es wurden bereits Sticker zu diesem Code gefunden. Möchtest du sie löschen und neu starten? Dann *antworte auf diese Nachricht* mit einem 'y'. Ansonsten kannst du jetzt einfach weiter Sticker senden")
 }
 
 
@@ -88,7 +96,7 @@ function initSession(author){
 async function evalImage(message){
     try {
         message.downloadMedia().then((image) => {
-            fs.writeFile(CONFIG['meme-path']  +  sha(image.data) + ".jpg", 
+            fs.writeFile(CONFIG['base-path'] + CONFIG['meme-path']  +  sha(image.data) + ".jpg", 
                 image.data, 
                 "base64",
                 function(error){
@@ -108,8 +116,23 @@ async function evalImage(message){
 
 
 // When user reacts to a meme we sent him for approval
-async function handleMemeApproval(message){
+async function handleApproval(message){
     feedback = await message.getQuotedMessage()
+
+    // When user wants to delete sticker from already existing session
+    if(feedback.body.startsWith("Es wurden bereits Sticker") && message.body === "y"){
+        const dir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location']
+
+        fs.readdirSync(dir).forEach((file) => {
+            console.log(file)
+            fs.unlink(dir + file, (error) => {
+                if(error){
+                    console.log("Error while deleting " + dir + " : " + error)
+                }
+            })
+        })
+        return;
+    }
 
     if(!feedback){
         client.sendMessage(message.from, "Irgendetwas ist schief gelaufen. Achte darauf, dass du nur auf memes reagieren kannst, die wir dir gesendet haben")
@@ -159,10 +182,10 @@ async function evalSticker(message){
         return null;
     }
 
-    client.sendMessage(message.from, "*[⏳]* Lade runter..");
     try {
         message.downloadMedia().then((sticker) => {
-            fs.writeFile(CONFIG['sticker-path'] + sessions[message.from].code + "/" + sha(sticker.data) + ".webp", 
+            createWhatsappSticherFileDirectory(sessions[message.from].code).then(
+                fs.writeFile(CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp", 
                 sticker.data, 
                 "base64",
                 function(error){
@@ -171,6 +194,7 @@ async function evalSticker(message){
                     }
                     console.log("Sticker saved from " + message.from)
                 })
+            )
         })
         message.reply("✅ Gespeichert!")
     } catch {
@@ -179,6 +203,14 @@ async function evalSticker(message){
 }
 
 
+async function createWhatsappSticherFileDirectory(code){
+    dir = CONFIG['base-path'] + CONFIG['sticker-path'] + code + "/" + CONFIG['sticker-file-location']
+    console.log(dir)
+
+    if(!fs.existsSync(dir)){
+        fs.mkdirSync(dir)
+    }
+}
 
 
 // Elevates a user to meme approver. The user then can use the "meme" command
@@ -193,8 +225,8 @@ function elevateUser(message){
 // Place your commands here and link it to a function
 const router = {
     "meme": approveMeme,
-    "y": handleMemeApproval,
-    "n": handleMemeApproval,
+    "y": handleApproval,
+    "n": handleApproval,
     "sticker": evalSticker,
     "image": evalImage,
 }

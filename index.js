@@ -8,6 +8,7 @@ const client = new Client();
 const Message = WAWebJS.Message;
 const CONFIG = require('./config.json');
 const path = require('path');
+const { unescape } = require('querystring');
 
 // contains info about each message author
 let sessions = {}
@@ -17,27 +18,27 @@ let sessions = {}
 
 // When user asks for a meme
 async function approveMeme(message){
+    client.sendMessage(message.from, "Die Funktion wird aktuell noch implementiert :(")
+    // if(sessions[message.from].role != "approver"){
+    //     message.reply("Du bist kein meme approver. Frage den Admin nach dem Passwort")
+    //     return null;
+    // }
 
-    if(sessions[message.from].role != "approver"){
-        message.reply("Du bist kein meme approver. Frage den Admin nach dem Passwort")
-        return null;
-    }
-
-    fs.readdir(CONFIG['meme-path'], (err, files) => {
-        if(files.length == 0){
-            client.sendMessage(message.from, "Danke bro, aber es gibt aktuell keine memes zum approven")
-            return null;
-        }
-        client.sendMessage(message.from, MessageMedia.fromFilePath(CONFIG['meme-path'] + files[0]))
-        client.sendMessage(message.from, files[0].slice(0, -4))
-    });
+    // fs.readdir(CONFIG['meme-path'], (err, files) => {
+    //     if(files.length == 0){
+    //         client.sendMessage(message.from, "Danke bro, aber es gibt aktuell keine memes zum approven")
+    //         return null;
+    //     }
+    //     client.sendMessage(message.from, MessageMedia.fromFilePath(CONFIG['meme-path'] + files[0]))
+    //     client.sendMessage(message.from, files[0].slice(0, -4))
+    // });
 }
 
 // When user sends a text string that is not predefined like "n" or "y"
 async function handleCode(message){
-    
+
     const dir = CONFIG['base-path'] + CONFIG['sticker-path'] + message.body
-    
+
     // Checks if folder exists
     if(!fs.existsSync(CONFIG['base-path'] + CONFIG['sticker-path'] + message.body)){
         client.sendMessage(message.from, "Wir haben keine Bestellung gefunden. Besuche https://www.stickemup.de um deinen Code zu erhalten")
@@ -46,14 +47,15 @@ async function handleCode(message){
 
     const sessionWasUsedBefore = (fs.readdirSync(dir + "/" + CONFIG['sticker-file-location']).length != "")
 
-    
+
     sessions[message.from].role = "active"
     sessions[message.from].code = message.body
     sessions[message.from].status = "open"
+    log("Code " + message.body + " was registered")
 
     if(!sessionWasUsedBefore){
         client.sendMessage(message.from, "Wir haben deinen Code gefunden, du kannst jetzt deine Sticker senden");
-        return;     
+        return;
     }
 
     client.sendMessage(message.from, "Es wurden bereits Sticker zu diesem Code gefunden. Möchtest du sie löschen und neu starten? Dann *antworte auf diese Nachricht* mit einem 'y'. Ansonsten kannst du jetzt einfach weiter Sticker senden")
@@ -75,7 +77,7 @@ function isCode(_code){
             code_legit = false
         }
     }
-    
+
     return code_legit;
 }
 
@@ -96,19 +98,12 @@ function initSession(author){
 async function evalImage(message){
     try {
         message.downloadMedia().then((image) => {
-            fs.writeFile(CONFIG['base-path'] + CONFIG['meme-path']  +  sha(image.data) + ".jpg", 
-                image.data, 
-                "base64",
-                function(error){
-                    if(error){
-                        return console.log(error)
-                    }
-                    console.log("image saved from : " + message.from)
-                })
+            message.reply(image, message.from, {
+                sendMediaAsSticker: true,
+            });
         })
-        message.reply("Habibi, danke")
     } catch {
-        message.reply("❎ Fehlgeschlagen!")
+        message.reply("❌ Fehlgeschlagen!")
     }
 }
 
@@ -124,13 +119,15 @@ async function handleApproval(message){
         const dir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location']
 
         fs.readdirSync(dir).forEach((file) => {
-            console.log(file)
             fs.unlink(dir + file, (error) => {
                 if(error){
-                    console.log("Error while deleting " + dir + " : " + error)
+                    log("Error while deleting " + dir + " : " + error, message.from)
+                    client.searchMessages(message.from, "Es ist ein Fehler unterlaufen :(")
+                    return;
                 }
             })
         })
+        client.sendMessage(message.from, "Es wurden alle zuvor gespeicherten Sticker gelöscht")
         return;
     }
 
@@ -139,31 +136,7 @@ async function handleApproval(message){
         return null;
     }
 
-    if(!fs.existsSync(CONFIG['meme-path'] + feedback.body + ".jpg")){
-        client.sendMessage(message.from, "Das meme existiert nicht mehr oder wurde bereits bewertet. Danke")
-        return null;
-    }
-
-    if(message.body == "y"){
-        fs.rename(CONFIG['meme-path'] + feedback.body + ".jpg", CONFIG['approved-memes'] + feedback.body + ".jpg", (error) => {
-            console.log(error)
-        })
-        fs.unlink(CONFIG['meme-path'] + feedback.body + "jpg", (error) => {
-            console.log(error)
-        })
-        client.sendMessage(message.from, "Danke habibi")
-        return null;
-    }
-
-    if(message.body == "n"){
-        fs.unlink(CONFIG['meme-path'] + feedback.body + "jpg", (error) => {
-            console.log(error)
-        })
-        return null;
-    }
-
     client.sendMessage(mesage.feedback, "Danke habibi")
-
 }
 
 
@@ -171,41 +144,47 @@ async function handleApproval(message){
 
 // When user sends a sticker
 async function evalSticker(message){
-    
+
     if(!sessions[message.from]){
-        client.sendMessage(message.from, "Bevor du mir Sticker senden kannst, musst du erst deinen Bestellcode genereieren. Besuche dafür https://www.stickemup.de")
+        client.sendMessage(message.from, "Bevor du mir Sticker senden kannst, musst du erst deinen Bestellcode generieren. Besuche dafür https://www.stickemup.de")
         return null;
     }
 
     if(sessions[message.from].status != "open"){
-        client.sendMessage(message.from, "Irgendetwas stimmt mit deinem Code nicht :( Versuche ihn neu zu generieren")
+        client.sendMessage(message.from, "Etwas stimmt mit deinem Code nicht :( Versuche ihn neu zu generieren")
         return null;
     }
 
     try {
         message.downloadMedia().then((sticker) => {
+
+            if(unescape(atob(sticker.data)).length > 100000){
+                client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
+                return null
+            }
+
             createWhatsappSticherFileDirectory(sessions[message.from].code).then(
-                fs.writeFile(CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp", 
-                sticker.data, 
+                
+                fs.writeFile(CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp",
+                sticker.data,
                 "base64",
                 function(error){
                     if(error){
-                        return console.log(error)
+                        return log("WHILE DOWNLOADING STICKER: " + error)
                     }
-                    console.log("Sticker saved from " + message.from)
-                })
+                    log("Sticker saved", message.from)
+                }),
+                message.reply("✅ Gespeichert!")
             )
         })
-        message.reply("✅ Gespeichert!")
     } catch {
-        message.reply("❎ Fehlgeschlagen!")
+        message.reply("❌ Fehlgeschlagen!")
     }
 }
 
 
 async function createWhatsappSticherFileDirectory(code){
     dir = CONFIG['base-path'] + CONFIG['sticker-path'] + code + "/" + CONFIG['sticker-file-location']
-    console.log(dir)
 
     if(!fs.existsSync(dir)){
         fs.mkdirSync(dir)
@@ -246,24 +225,38 @@ function dispatcher(message){
 
 }
 
+function getTime(date){
+    return date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds()
+}
 
+async function log(content, author){
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    todayString = mm + '-' + dd + '-' + yyyy;
 
+    const logFilePath = CONFIG['log-file'] + todayString
+    try{
+        fs.createWriteStream(logFilePath, {flags:'a'}).write("[" + getTime(today) + "] " + (author === undefined ? "" : author + "  ") + content + "\n")
+    }catch(error){
+        console.log(error)
+    }
+}
 
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
-    console.log('Client is ready!');
+    log('Client is ready!');
 });
 
 // HIER WIRD DIR NACHRICHT ABGEFANGEN
 client.on('message',  message => {
-    console.log("NEW MESSAGE from " + message.from + " with type " + message.type + ": '" + message.body + "'")
+    log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
     initSession(message.from)
     dispatcher(message)
 });
 
 client.initialize();
-
- 

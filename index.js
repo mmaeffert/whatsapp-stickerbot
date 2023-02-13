@@ -9,11 +9,12 @@ const Message = WAWebJS.Message;
 const CONFIG = require('./config.json');
 const path = require('path');
 const { unescape } = require('querystring');
+const { time } = require('console');
 
 // contains info about each message author
 let sessions = {}
 
-
+bruteForceLog = new Map()
 
 
 // When user asks for a meme
@@ -229,6 +230,28 @@ function getTime(date){
     return date.getHours() + "-" + date.getMinutes() + "-" + date.getSeconds()
 }
 
+
+function checkBruteForce(message){
+    if(!bruteForceLog.has(message.from)){
+        bruteForceLog.set(message.from, [Date.now()])
+    }
+
+    console.log("bruteforcelog at beginning: " + bruteForceLog)
+    var userLog = bruteForceLog.get(message.from)
+    console.log("userlog: " + userLog)
+    console.log("userlog type: " + typeof userLog)
+
+    userLog = userLog.filter(timestamp => {
+        return ((Date.now() - timestamp) < (CONFIG['bruteforce-timeframe-in-minutes']*60*1000))
+    })
+    console.log("filtered userLOG: " + userLog)
+    userlog = userLog.push(Date.now())
+    console.log("new userlog: " + userLog)
+
+    bruteForceLog.set(message.from, userLog)
+    console.log("bruteforcelog at end: " + bruteForceLog)
+}
+
 async function log(content, author){
     var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
@@ -254,9 +277,11 @@ client.on('ready', () => {
 
 // HIER WIRD DIR NACHRICHT ABGEFANGEN
 client.on('message',  message => {
-    log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
-    initSession(message.from)
-    dispatcher(message)
+    if(checkBruteForce(message)){
+        log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
+        initSession(message.from)
+        dispatcher(message)
+    }
 });
 
 client.initialize();

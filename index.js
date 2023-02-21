@@ -13,7 +13,6 @@ const atob = require("atob");
 const { platform } = require('os');
 const fsPromises = require("fs").promises;
 
-
 // contains info about each message author
 let sessions = {}
 let sessionData;
@@ -62,21 +61,21 @@ async function changeFilePermission(path){
     }
 
     try{
-        const file = await fsPromises.open(path, "r");
+        const file = fs.openSync(path, "r");
 
         fs.fchmod(file, CONFIG['sticker-file-permission'], err =>{
             if(err){
                 log("[ERROR] could not change permission (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
             }else{
-                log("changed permission (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+                log("changed permission (" + CONFIG['sticker-file-permission'] + ") of file: " + path + " with error: " + err)
             }
         })
 
-        fs.chown (file, CONFIG['sticker-file-owner'], CONFIG['sticker-file-owner'], err =>{
+        fs.fchown (file, CONFIG['sticker-file-owner-uid'], CONFIG['sticker-file-owner-guid'], err =>{
             if(err){
-                log("[ERROR] could not change owner (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+                log("[ERROR] could not change owner (" + CONFIG['sticker-file-owner-uid'] + ") of file: " + path + " with error: " + err)
             }else{
-                log("changed owner (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+                log("changed owner (" + CONFIG['sticker-file-permission'] + ") of file: " + path + " to " + CONFIG['sticker-file-owner-uid'] + " and group " + CONFIG['sticker-file-owner-guid'])
             }
         })
     }catch (error){
@@ -186,15 +185,18 @@ async function evalSticker(message){
                     return
                 }
 
-                fs.writeFile(CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp",
+                const stickerdir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp"
+                fs.writeFile(stickerdir,
                 sticker.data,
                 "base64",
                 (err) => {
                     if(err){
                         return log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
+                    }else{
+                        changeFilePermission(stickerdir)
+                        log("Sticker saved", message.from)
+                        message.reply("✅ Gespeichert!")
                     }
-                    log("Sticker saved", message.from)
-                    message.reply("✅ Gespeichert!")
                 })
             }
             )

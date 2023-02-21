@@ -10,30 +10,13 @@ const CONFIG = require('./config.json');
 const path = require('path');
 const { unescape } = require('querystring');
 const { time } = require('console');
+const atob = require("atob")
 
 // contains info about each message author
 let sessions = {}
 
 bruteForceLog = new Map()
 
-
-// When user asks for a meme
-async function approveMeme(message){
-    client.sendMessage(message.from, "Die Funktion wird aktuell noch implementiert :(")
-    // if(sessions[message.from].role != "approver"){
-    //     message.reply("Du bist kein meme approver. Frage den Admin nach dem Passwort")
-    //     return null;
-    // }
-
-    // fs.readdir(CONFIG['meme-path'], (err, files) => {
-    //     if(files.length == 0){
-    //         client.sendMessage(message.from, "Danke bro, aber es gibt aktuell keine memes zum approven")
-    //         return null;
-    //     }
-    //     client.sendMessage(message.from, MessageMedia.fromFilePath(CONFIG['meme-path'] + files[0]))
-    //     client.sendMessage(message.from, files[0].slice(0, -4))
-    // });
-}
 
 // When user sends a text string that is not predefined like "n" or "y"
 async function handleCode(message){
@@ -164,31 +147,45 @@ async function evalSticker(message){
                 return null
             }
 
-            createWhatsappSticherFileDirectory(sessions[message.from].code).then(
-                
+            createWhatsappSticherFileDirectory(sessions[message.from].code).then((result) => {
+
+                //If could not create directory
+                if(result === false){
+                    log("[ERROR] creating directory", message.from)
+                    message.reply("Es gab einen Fehler, wir suchen bereits nach der Lösung. Versuche es in der Zwischenzeit mit einem anderen Sticker")
+                    return
+                }
+
                 fs.writeFile(CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp",
                 sticker.data,
                 "base64",
-                function(error){
-                    if(error){
-                        return log("WHILE DOWNLOADING STICKER: " + error)
+                (err) => {
+                    if(err){
+                        return log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
                     }
                     log("Sticker saved", message.from)
-                }),
-                message.reply("✅ Gespeichert!")
+                    message.reply("✅ Gespeichert!")
+                })
+            }
             )
         })
     } catch {
         message.reply("❌ Fehlgeschlagen!")
+        log("[ERROR] while downloading media from sticker", message.from)
     }
 }
 
 
 async function createWhatsappSticherFileDirectory(code){
     dir = CONFIG['base-path'] + CONFIG['sticker-path'] + code + "/" + CONFIG['sticker-file-location']
-
-    if(!fs.existsSync(dir)){
-        fs.mkdirSync(dir)
+    try{
+        if(!fs.existsSync(dir)){
+            fs.mkdirSync(dir)
+        }
+    }catch(error){
+        if(error){
+            return false
+        }
     }
 }
 
@@ -277,11 +274,9 @@ client.on('ready', () => {
 
 // HIER WIRD DIR NACHRICHT ABGEFANGEN
 client.on('message',  message => {
-    if(checkBruteForce(message)){
         log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
         initSession(message.from)
         dispatcher(message)
-    }
 });
 
 client.initialize();

@@ -9,7 +9,9 @@ const CONFIG = require('./config.json');
 const path = require('path');
 const { unescape } = require('querystring');
 const { time } = require('console');
-const atob = require("atob")
+const atob = require("atob");
+const { platform } = require('os');
+const fsPromises = require("fs").promises;
 
 
 // contains info about each message author
@@ -52,6 +54,38 @@ async function handleCode(message){
     client.sendMessage(message.from, "Es wurden bereits Sticker zu diesem Code gefunden. Möchtest du sie löschen und neu starten? Dann *antworte auf diese Nachricht* mit einem 'y'. Ansonsten kannst du jetzt einfach weiter Sticker senden")
 }
 
+async function changeFilePermission(path){
+
+    // if on windows, then cancel
+    if(process.platform == "win32"){
+        return
+    }
+
+    try{
+        const file = await fsPromises.open(path, "r");
+
+        fs.fchmod(file, CONFIG['sticker-file-permission'], err =>{
+            if(err){
+                log("[ERROR] could not change permission (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+            }else{
+                log("changed permission (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+            }
+        })
+
+        fs.chown (file, CONFIG['sticker-file-owner'], CONFIG['sticker-file-owner'], err =>{
+            if(err){
+                log("[ERROR] could not change owner (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+            }else{
+                log("changed owner (" + CONFIG['sticker-file-permission'] + ") of file: " + path)
+            }
+        })
+    }catch (error){
+        log("[ERROR] " + error)
+    }
+
+    
+}
+
 function isCode(_code){
     const availableChars = "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ"
     let code_legit = true;
@@ -90,6 +124,36 @@ async function evalImage(message){
         log("[ERROR] converting image to sticker", message.from)
         message.reply("❌ Fehlgeschlagen!")
     }
+}
+
+
+// When user reacts to a meme we sent him for approval
+async function handleApproval(message){
+    feedback = await message.getQuotedMessage()
+
+    // When user wants to delete sticker from already existing session
+    if(feedback.body.startsWith("Es wurden bereits Sticker") && message.body === "y"){
+        const dir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location']
+
+        fs.readdirSync(dir).forEach((file) => {
+            fs.unlink(dir + file, (error) => {
+                if(error){
+                    log("Error while deleting " + dir + " : " + error, message.from)
+                    client.searchMessages(message.from, "Es ist ein Fehler unterlaufen :(")
+                    return;
+                }
+            })
+        })
+        client.sendMessage(message.from, "Es wurden alle zuvor gespeicherten Sticker gelöscht")
+        return;
+    }
+
+    if(!feedback){
+        client.sendMessage(message.from, "Irgendetwas ist schief gelaufen. Achte darauf, dass du nur auf memes reagieren kannst, die wir dir gesendet haben")
+        return null;
+    }
+
+    client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
 // When user sends a sticker

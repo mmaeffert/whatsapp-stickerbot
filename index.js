@@ -163,8 +163,9 @@ async function evalSticker(message){
         return null;
     }
 
-    if(sessions[message.from].status != "open"){
-        client.sendMessage(message.from, "Etwas stimmt mit deinem Code nicht :( Versuche ihn neu zu generieren")
+    if(!sessions[message.from].status || sessions[message.from].status != "open"){
+        log("Session wrong :/")
+        client.sendMessage(message.from, "Starte deine Bestellung auf https://stickem.shop und kopiere den Code von der Website in diesen Chat")
         return null;
     }
 

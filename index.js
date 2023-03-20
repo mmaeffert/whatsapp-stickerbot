@@ -12,6 +12,7 @@ const { time } = require('console');
 const atob = require("atob");
 const { platform } = require('os');
 const fsPromises = require("fs").promises;
+const { setTimeout } = require("timers/promises")
 
 // contains info about each message author
 let sessions = {}
@@ -112,13 +113,13 @@ function initSession(author){
 // When user sends an image
 async function evalImage(message){
     try {
-        client.sendMessage("Lade runter...")
         message.downloadMedia().then((image) => {
+            log("Converted image to sticker", message.from),
             message.reply(image, message.from, {
                 sendMediaAsSticker: true,
-                caption: "Gerngeschehen.. Aber stell dir vor, diesen Sticker könntest du drucken und nach Hause bekommen. Bald auf https://stickem.shop"
+            }).then(() => {
+                client.sendMessage(message.from, "Geiler Sticker bro! Aber weißt du schon? Bald kannst du den sticker auch auf https://stickem.shop drucken")            
             });
-            log("Converted image to sticker", message.from)
         })
     } catch {
         log("[ERROR] converting image to sticker", message.from)
@@ -280,7 +281,7 @@ function checkBruteForce(message){
 }
 
 async function log(content, author){
-    var today = new Date();queryEx
+    var today = new Date();
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = today.getFullYear();
@@ -303,6 +304,20 @@ function checkForAnnouncement(message){
     return
 }
 
+function loadSessions(){
+    log("trying to load session")
+    if (fs.existsSync(CONFIG['log-file'] + 'session.json')) {
+        fs.readFile(CONFIG['log-file'] + "session.json", function (error, content) {
+            sessions = JSON.parse(content);
+            log("Found sessions:\n" + content)
+        });
+    }
+}
+
+async function persistSession(){
+
+}
+
 
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
@@ -310,6 +325,17 @@ client.on('qr', qr => {
 
 client.on('ready', () => {
     log('Client is ready!');
+    loadSessions();
+    setInterval(function(){
+        log("writing sessions.json")
+        fs.writeFile(CONFIG['log-file'] + "session.json", JSON.stringify(sessions), function(err) {
+            if(err) {
+                log(err);
+            }else{
+                log("Saved Session")
+            }
+        });
+    } ,6000)
     client.sendMessage(CONFIG['admin-chat-id'], "Bot just restarted")
 });
 

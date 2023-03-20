@@ -1,0 +1,41 @@
+2023/03/20-19:27:31.429 4998 Reusing MANIFEST D:\code\stickerbot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2023/03/20-19:27:31.430 4998 Recovering log #604
+2023/03/20-19:27:31.727 4998 Reusing old log D:\code\stickerbot\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000604.log 
+2023/03/20-19:28:03.002 303c Level-0 table #622: started
+2023/03/20-19:28:03.183 303c Level-0 table #622: 1118508 bytes OK
+2023/03/20-19:28:03.189 303c Delete type=0 #604
+2023/03/20-19:28:03.223 303c Compacting 1@0 + 0@1 files
+2023/03/20-19:28:03.413 303c Generated table #623@0: 21724 keys, 672315 bytes
+2023/03/20-19:28:03.428 303c Generated table #624@0: 676 keys, 14700 bytes
+2023/03/20-19:28:03.430 303c Compacted 1@0 + 0@1 files => 687015 bytes
+2023/03/20-19:28:03.432 303c compacted to: files[ 0 2 12 0 0 0 0 ]
+2023/03/20-19:28:03.809 4998 Compacting 1@1 + 10@2 files
+2023/03/20-19:28:04.164 4998 Generated table #625@1: 38371 keys, 2216757 bytes
+2023/03/20-19:28:04.400 4998 Generated table #626@1: 4003 keys, 2158519 bytes
+2023/03/20-19:28:04.563 4998 Generated table #627@1: 4148 keys, 2159849 bytes
+2023/03/20-19:28:04.726 4998 Generated table #628@1: 4402 keys, 2165076 bytes
+2023/03/20-19:28:04.914 4998 Generated table #629@1: 21467 keys, 2196756 bytes
+2023/03/20-19:28:05.178 4998 Generated table #630@1: 30203 keys, 2260860 bytes
+2023/03/20-19:28:05.439 4998 Generated table #631@1: 33916 keys, 2212582 bytes
+2023/03/20-19:28:05.622 4998 Generated table #632@1: 34363 keys, 2163784 bytes
+2023/03/20-19:28:05.960 4998 Generated table #633@1: 103655 keys, 2255450 bytes
+2023/03/20-19:28:06.322 4998 Generated table #634@1: 101945 keys, 2252153 bytes
+2023/03/20-19:28:06.381 4998 Generated table #635@1: 16244 keys, 352348 bytes
+2023/03/20-19:28:06.381 4998 Compacted 1@1 + 10@2 files => 22394134 bytes
+2023/03/20-19:28:06.383 4998 compacted to: files[ 0 1 13 0 0 0 0 ]
+2023/03/20-19:28:06.384 4998 Delete type=2 #608
+2023/03/20-19:28:06.384 4998 Delete type=2 #609
+2023/03/20-19:28:06.384 4998 Delete type=2 #610
+2023/03/20-19:28:06.384 4998 Delete type=2 #611
+2023/03/20-19:28:06.384 4998 Delete type=2 #612
+2023/03/20-19:28:06.384 4998 Delete type=2 #613
+2023/03/20-19:28:06.384 4998 Delete type=2 #614
+2023/03/20-19:28:06.384 4998 Delete type=2 #615
+2023/03/20-19:28:06.384 4998 Delete type=2 #616
+2023/03/20-19:28:06.384 4998 Delete type=2 #617
+2023/03/20-19:28:06.384 4998 Delete type=2 #622
+2023/03/20-19:28:06.385 4998 Delete type=2 #623
+2023/03/20-19:28:06.449 40f8 Compacting 1@1 + 2@2 files
+2023/03/20-19:28:06.608 40f8 Generated table #636@1: 42571 keys, 932542 bytes
+2023/03/20-19:28:06.608 40f8 Compacted 1@1 + 2@2 files => 932542 bytes
+2023/03/20-19:28:06.611 40f8 compacted to: files[ 0 0 12 0 0 0 0 ]

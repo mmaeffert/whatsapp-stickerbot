@@ -116,6 +116,7 @@ async function evalImage(message){
         message.downloadMedia().then((image) => {
             message.reply(image, message.from, {
                 sendMediaAsSticker: true,
+                caption: "Gerngeschehen.. Aber stell dir vor, diesen Sticker könntest du drucken und nach Hause bekommen. Bald auf https://stickem.shop"
             });
             log("Converted image to sticker", message.from)
         })
@@ -262,24 +263,24 @@ function checkBruteForce(message){
         bruteForceLog.set(message.from, [Date.now()])
     }
 
-    console.log("bruteforcelog at beginning: " + bruteForceLog)
+    log("bruteforcelog at beginning: " + bruteForceLog)
     var userLog = bruteForceLog.get(message.from)
-    console.log("userlog: " + userLog)
-    console.log("userlog type: " + typeof userLog)
+    log("userlog: " + userLog)
+    log("userlog type: " + typeof userLog)
 
     userLog = userLog.filter(timestamp => {
         return ((Date.now() - timestamp) < (CONFIG['bruteforce-timeframe-in-minutes']*60*1000))
     })
-    console.log("filtered userLOG: " + userLog)
+    log("filtered userLOG: " + userLog)
     userlog = userLog.push(Date.now())
-    console.log("new userlog: " + userLog)
+    log("new userlog: " + userLog)
 
     bruteForceLog.set(message.from, userLog)
-    console.log("bruteforcelog at end: " + bruteForceLog)
+    log("bruteforcelog at end: " + bruteForceLog)
 }
 
 async function log(content, author){
-    var today = new Date();
+    var today = new Date();queryEx
     var dd = String(today.getDate()).padStart(2, '0');
     var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
     var yyyy = today.getFullYear();
@@ -293,19 +294,32 @@ async function log(content, author){
     }
 }
 
+
+function checkForAnnouncement(message){
+    if(sessions[message.from].last_announcement != CONFIG['last-announcement']){
+        client.sendMessage(message.from, CONFIG['last-announcement'])
+        sessions[message.from].last_announcement = CONFIG['last-announcement']
+    }
+    return
+}
+
+
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
 });
 
 client.on('ready', () => {
     log('Client is ready!');
+    client.sendMessage(CONFIG['admin-chat-id'], "Bot just restarted")
 });
 
 // HIER WIRD DIR NACHRICHT ABGEFANGEN
 client.on('message',  message => {
-        log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
-        initSession(message.from)
-        dispatcher(message)
+    if(message.from == CONFIG['admin-chat-id']) return
+    log("NEW MESSAGE from with type " + message.type + " -messagebody: '" + message.body + "'", message.from)
+    initSession(message.from)
+    checkForAnnouncement(message)
+    dispatcher(message)
 });
 
 client.initialize();

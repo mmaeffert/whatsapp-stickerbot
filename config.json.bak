@@ -1,0 +1,16 @@
+{
+    "base-path": "/var/www/",
+    "sticker-path":"kama-sticker-uploads/",
+    "meme-path":"memes/",
+    "sticker-file-location":"wa_bot_upload_dir/",
+    "approved-memes": "approved-memes/",
+    "log-file": "/home/stickershop/whatsapp-bot/logs/",
+    "bruteforce-timeframe-in-minutes": 1,
+    "allowed-number-of-messages-within-time-frame": 10,
+    "sticker-file-owner-uid": 116,
+    "sticker-file-owner-guid": 1005,
+    "sticker-file-permission": "664",
+    "admin-chat-id": "120363097236780893@g.us",
+    "last-announcement": "Wusstest du schon? Wir eröffnen bald unsere Website, wo du deine Whatsapp Sticker hochladen und ausdrucken kannst. Stay tuned",
+    "help-command": "Um Sticker deiner Bestellung hinzuzufügen, sende uns den 6-stelligen code, der dir auf der Website angezeigt wird. Danach kannst du die Sticker in den Chat spamen und sie werden deiner Bestellung zugeordnet. Keine Sorge, solltest du Sticker aus versehen geschickt haben, kannst du sie im nächsten Schritt auf der Website wieder entfernen\nhttps://stickem.shop"
+}

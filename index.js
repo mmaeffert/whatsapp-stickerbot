@@ -178,29 +178,32 @@ function fileSizeAllowed(data, maxSize = 200000){
                 log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
                 isAllowed = false
             }else{
-                fs.stat(
-                    filePath,
-                    (err, stats) => {
-                        if (err) {
-                            log(`[ERROR] File doesn't exist: ` + filePath)
-                            isAllowed = false
-                        } else {
-                            fs.unlink(filePath, (error) => {
-                                if(error){
-                                    log("Error while deleting " + filePath + " : " + error)
-                                }
-                            })
-                            log("statsize: " + stats.size)
-                            log("maxSize: " + maxSize)
-                            log(stats.size <= maxSize)
 
-                            isAllowed = stats.size <= maxSize
-                        }
-                    }
-                )
             }
         }
     )
+
+    return fs.stat(
+        filePath,
+        (err, stats) => {
+            if (err) {
+                log(`[ERROR] File doesn't exist: ` + filePath)
+                isAllowed = false
+            } else {
+                fs.unlink(filePath, (error) => {
+                    if(error){
+                        log("Error while deleting " + filePath + " : " + error)
+                    }
+                })
+                log("statsize: " + stats.size)
+                log("maxSize: " + maxSize)
+                log(stats.size <= maxSize)
+
+                return isAllowed = stats.size <= maxSize
+            }
+        }
+    )
+
     log("isallowed: " + isAllowed)
     return isAllowed
 }
@@ -222,7 +225,7 @@ async function evalSticker(message){
         message.downloadMedia().then((sticker) => {
 
             log("result of fileSizeAllowed: " + fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes']))
-            if(!fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){
+            if(fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){
                 client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
                 return
             }

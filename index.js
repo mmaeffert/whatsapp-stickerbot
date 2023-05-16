@@ -224,12 +224,15 @@ async function evalSticker(message){
     try {
         message.downloadMedia().then((sticker) => {
 
+            belowMaxFileSize = false
             fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
                 if(!response){
                     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
-                    return
                 }
+                belowMaxFileSize = response
             })
+
+            if(!belowMaxFileSize) return
 
             // log("result of fileSizeAllowed: " + fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes']))
             // if(fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){

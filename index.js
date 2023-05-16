@@ -160,10 +160,11 @@ async function handleApproval(message){
     client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
-function fileSizeAllowed(data, size = 200000){
+function fileSizeAllowed(data, maxSize = 200000){
     if(!data) return false
 
     filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
+    log("filepath:" + filePath)
     fs.writeFile(
         filePath, 
         data,
@@ -185,7 +186,8 @@ function fileSizeAllowed(data, size = 200000){
                                     log("Error while deleting " + dir + " : " + error, message.from)
                                 }
                             })
-                            return stats.size <= size 
+                            log("statsize: " + stats.size)
+                            return stats.size <= maxSize 
                         }
                     }
                 )

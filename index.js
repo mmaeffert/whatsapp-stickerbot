@@ -183,7 +183,7 @@ function fileSizeAllowed(data, maxSize = 200000){
                         } else {
                             fs.unlink(filePath, (error) => {
                                 if(error){
-                                    log("Error while deleting " + filePath + " : " + error, message.from)
+                                    log("Error while deleting " + filePath + " : " + error)
                                 }
                             })
                             log("statsize: " + stats.size)

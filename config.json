@@ -9,6 +9,7 @@
     "allowed-number-of-messages-within-time-frame": 10,
     "sticker-file-owner-uid": 116,
     "sticker-file-owner-guid": 1005,
+    "max-sticker-size-in-bytes": 100000,
     "sticker-file-permission": "664",
     "admin-chat-id": "120363097236780893@g.us",
     "last-announcement": "Moin! Bald geht unsere Website life auf stickem.shop. Dort bekommst du deine Whatsapp Sticker in Premium Qualität gedruckt und nach Hause geschickt",

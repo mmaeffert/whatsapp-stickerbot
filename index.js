@@ -11,6 +11,7 @@ const { unescape } = require('querystring');
 const { time } = require('console');
 const atob = require("atob");
 const { platform } = require('os');
+const { publicEncrypt } = require('crypto');
 const fsPromises = require("fs").promises;
 
 // contains info about each message author
@@ -159,6 +160,45 @@ async function handleApproval(message){
     client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
+function fileSizeAllowed(data, maxSize = 200000, callback){
+    if(!data){
+        log("no data found for fileSizeAllowed")
+        return false;
+    }
+
+    isAllowed = false
+    filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
+    fs.writeFileSync(
+        filePath, 
+        data,
+        "base64",
+        (err) => {
+            if(err){
+                log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
+                isAllowed = false
+            }else{
+
+            }
+        }
+    )
+    return fs.stat(
+        filePath,
+        (err, stats) => {
+            if (err) {
+                log(`[ERROR] File doesn't exist: ` + filePath)
+                isAllowed = false
+            } else {
+                fs.unlink(filePath, (error) => {
+                    if(error){
+                        log("Error while deleting " + filePath + " : " + error)
+                    }
+                })
+                return callback(stats.size <= maxSize)
+            }
+        }
+    )
+}
+
 // When user sends a sticker
 async function evalSticker(message){
 
@@ -175,10 +215,14 @@ async function evalSticker(message){
     try {
         message.downloadMedia().then((sticker) => {
 
-            if(unescape(atob(sticker.data)).length > 100000){
-                client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
-                return null
-            }
+            belowMaxFileSize = false
+            fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
+                if(!response){
+                    client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
+                }
+                belowMaxFileSize = response
+            })
+            if(!belowMaxFileSize) return
 
 //	    log(JSON.stringify(sessions[message.from]))
 //	    if(sessions[message.from].previous_sticker.includes(sha(sticker.data))){

@@ -194,6 +194,10 @@ function fileSizeAllowed(data, maxSize = 200000, callback){
                     }
                 })
                 log("returning calback for max file size check: " + stats.size <= maxSize)
+                log("stats.size: " + stats.size)
+                log("maxSize: " + maxSize)
+                log(stats.size <= maxSize)
+
                 return callback(stats.size <= maxSize)
             }
         }

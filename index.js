@@ -222,15 +222,14 @@ async function evalSticker(message){
 
             belowMaxFileSize = false
             log("Checking filesize", message.from)
-            await fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
+            const allowed = await fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
                 if(!response){
                     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
                 }
-                belowMaxFileSize = response
+                return response
             })
-            log("Below FileSize: " + belowMaxFileSize, message.author)
-
-            if(!belowMaxFileSize) return
+            log("Below FileSize: " + allowed, message.author)
+            if(!allowed) return
 
 //	    log(JSON.stringify(sessions[message.from]))
 //	    if(sessions[message.from].previous_sticker.includes(sha(sticker.data))){

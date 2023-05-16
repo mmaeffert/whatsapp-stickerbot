@@ -165,7 +165,7 @@ function fileSizeAllowed(data, maxSize = 200000){
 
     filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
     log("filepath:" + filePath)
-    fs.writeFile(
+    return fs.writeFile(
         filePath, 
         data,
         "base64",
@@ -174,7 +174,7 @@ function fileSizeAllowed(data, maxSize = 200000){
                 log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
                 return false
             }else{
-                fs.stat(
+                return fs.stat(
                     filePath,
                     (err, stats) => {
                         if (err) {

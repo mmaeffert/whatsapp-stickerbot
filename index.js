@@ -11,6 +11,7 @@ const { unescape } = require('querystring');
 const { time } = require('console');
 const atob = require("atob");
 const { platform } = require('os');
+const { publicEncrypt } = require('crypto');
 const fsPromises = require("fs").promises;
 
 // contains info about each message author
@@ -159,6 +160,40 @@ async function handleApproval(message){
     client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
+function fileSizeAllowed(data, size = 200000){
+    if(!data) return false
+
+    filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
+    fs.writeFile(
+        filePath, 
+        data,
+        "base64",
+        (err) => {
+            if(err){
+                log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
+                return false
+            }else{
+                fs.stat(
+                    filePath,
+                    (err, stats) => {
+                        if (err) {
+                            log(`[ERROR] File doesn't exist: ` + filePath)
+                            return false
+                        } else {
+                            fs.unlink(filePath, (error) => {
+                                if(error){
+                                    log("Error while deleting " + dir + " : " + error, message.from)
+                                }
+                            })
+                            return stats.size <= size 
+                        }
+                    }
+                )
+            }
+        }
+    )
+}
+
 // When user sends a sticker
 async function evalSticker(message){
 
@@ -175,9 +210,9 @@ async function evalSticker(message){
     try {
         message.downloadMedia().then((sticker) => {
 
-            if(unescape(atob(sticker.data)).length > 100000){
+            if(!fileSizeAllowed(sticker.data)){
                 client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
-                return null
+                return
             }
 
 //	    log(JSON.stringify(sessions[message.from]))

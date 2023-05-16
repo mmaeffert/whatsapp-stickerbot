@@ -160,7 +160,9 @@ async function handleApproval(message){
     client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
-function fileSizeAllowed(data, maxSize = 200000){
+function fileSizeAllowed(data, maxSize){
+    if(!maxSize) maxSize = 200000
+    
     if(!data){
         log("no data found for fileSizeAllowed")
         return false;

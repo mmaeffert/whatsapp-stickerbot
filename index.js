@@ -161,25 +161,29 @@ async function handleApproval(message){
 }
 
 function fileSizeAllowed(data, maxSize = 200000){
-    if(!data) return false
+    if(!data){
+        log("no data found for fileSizeAllowed")
+        return false;
+    }
 
+    isAllowed = false
     filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
     log("filepath:" + filePath)
-    return fs.writeFile(
+    fs.writeFileSync(
         filePath, 
         data,
         "base64",
         (err) => {
             if(err){
                 log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
-                return false
+                isAllowed = false
             }else{
-                return fs.stat(
+                fs.stat(
                     filePath,
                     (err, stats) => {
                         if (err) {
                             log(`[ERROR] File doesn't exist: ` + filePath)
-                            return false
+                            isAllowed = false
                         } else {
                             fs.unlink(filePath, (error) => {
                                 if(error){
@@ -190,13 +194,15 @@ function fileSizeAllowed(data, maxSize = 200000){
                             log("maxSize: " + maxSize)
                             log(stats.size <= maxSize)
 
-                            return (stats.size <= maxSize) 
+                            isAllowed = stats.size <= maxSize
                         }
                     }
                 )
             }
         }
     )
+    log("isallowed: " + isAllowed)
+    return isAllowed
 }
 
 // When user sends a sticker

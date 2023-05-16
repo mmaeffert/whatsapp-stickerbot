@@ -222,14 +222,38 @@ async function evalSticker(message){
 
             belowMaxFileSize = false
             log("Checking filesize", message.from)
-            if(!fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
+            fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
                 if(!response){
                     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
+                }else{
+                    createWhatsappSticherFileDirectory(sessions[message.from].code).then((result) => {
+
+                        //If could not create directory
+                        if(result === false){
+                            log("[ERROR] creating directory", message.from)
+                            message.reply("Es gab einen Fehler, wir suchen bereits nach der Lösung. Versuche es in der Zwischenzeit mit einem anderen Sticker")
+                            return
+                        }
+        
+                        const stickerdir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp"
+                        fs.writeFile(stickerdir,
+                        sticker.data,
+                        "base64",
+                        (err) => {
+                            if(err){
+                                return log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
+                            }else{
+                    sessions[message.from].previous_sticker.push(sha(sticker.data))
+                                changeFilePermission(stickerdir)
+                                log("Sticker saved", message.from)
+                                message.reply("✅ Gespeichert!")
+                            }
+                        })
+                    }
+                    )
                 }
-                return response
-            })){
-                return
-            }
+            
+            })
 
 
 //	    log(JSON.stringify(sessions[message.from]))
@@ -238,31 +262,7 @@ async function evalSticker(message){
 //		return null
 //	    }
 
-            createWhatsappSticherFileDirectory(sessions[message.from].code).then((result) => {
 
-                //If could not create directory
-                if(result === false){
-                    log("[ERROR] creating directory", message.from)
-                    message.reply("Es gab einen Fehler, wir suchen bereits nach der Lösung. Versuche es in der Zwischenzeit mit einem anderen Sticker")
-                    return
-                }
-
-                const stickerdir = CONFIG['base-path'] + CONFIG['sticker-path'] + sessions[message.from].code + "/" + CONFIG['sticker-file-location'] + sha(sticker.data) + ".webp"
-                fs.writeFile(stickerdir,
-                sticker.data,
-                "base64",
-                (err) => {
-                    if(err){
-                        return log("[ERROR] WHILE DOWNLOADING STICKER: " + err, message.from)
-                    }else{
-			sessions[message.from].previous_sticker.push(sha(sticker.data))
-                        changeFilePermission(stickerdir)
-                        log("Sticker saved", message.from)
-                        message.reply("✅ Gespeichert!")
-                    }
-                })
-            }
-            )
         })
     } catch {
         message.reply("❌ Fehlgeschlagen!")

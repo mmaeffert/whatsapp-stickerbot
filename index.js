@@ -231,11 +231,11 @@ async function evalSticker(message){
                 }
             })
 
-            log("result of fileSizeAllowed: " + fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes']))
-            if(fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){
-                client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
-                return
-            }
+            // log("result of fileSizeAllowed: " + fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes']))
+            // if(fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){
+            //     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
+            //     return
+            // }
 
 //	    log(JSON.stringify(sessions[message.from]))
 //	    if(sessions[message.from].previous_sticker.includes(sha(sticker.data))){

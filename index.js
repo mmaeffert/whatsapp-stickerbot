@@ -168,7 +168,6 @@ function fileSizeAllowed(data, maxSize = 200000, callback){
 
     isAllowed = false
     filePath = CONFIG['base-path'] + CONFIG['sticker-path'] + "temp/" + sha(data) + ".webp"
-    log("filepath:" + filePath)
     fs.writeFileSync(
         filePath, 
         data,
@@ -182,7 +181,6 @@ function fileSizeAllowed(data, maxSize = 200000, callback){
             }
         }
     )
-
     return fs.stat(
         filePath,
         (err, stats) => {
@@ -195,17 +193,10 @@ function fileSizeAllowed(data, maxSize = 200000, callback){
                         log("Error while deleting " + filePath + " : " + error)
                     }
                 })
-                log("statsize: " + stats.size)
-                log("maxSize: " + maxSize)
-                log(stats.size <= maxSize)
-
                 return callback(stats.size <= maxSize)
             }
         }
     )
-
-    log("isallowed: " + isAllowed)
-    return isAllowed
 }
 
 // When user sends a sticker
@@ -231,14 +222,7 @@ async function evalSticker(message){
                 }
                 belowMaxFileSize = response
             })
-
             if(!belowMaxFileSize) return
-
-            // log("result of fileSizeAllowed: " + fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes']))
-            // if(fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'])){
-            //     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
-            //     return
-            // }
 
 //	    log(JSON.stringify(sessions[message.from]))
 //	    if(sessions[message.from].previous_sticker.includes(sha(sticker.data))){

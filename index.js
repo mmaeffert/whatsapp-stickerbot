@@ -160,7 +160,7 @@ async function handleApproval(message){
     client.sendMessage(mesage.feedback, "Danke habibi")
 }
 
-function fileSizeAllowed(data, maxSize = 200000, callback){
+async function fileSizeAllowed(data, maxSize = 200000, callback){
     if(!data){
         log("no data found for fileSizeAllowed")
         return false;
@@ -218,17 +218,18 @@ async function evalSticker(message){
     }
 
     try {
-        message.downloadMedia().then((sticker) => {
+        message.downloadMedia().then(async (sticker) => {
 
             belowMaxFileSize = false
             log("Checking filesize", message.from)
-            fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
+            await fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
                 if(!response){
                     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
                 }
                 belowMaxFileSize = response
             })
             log("Below FileSize: " + belowMaxFileSize, message.author)
+
             if(!belowMaxFileSize) return
 
 //	    log(JSON.stringify(sessions[message.from]))

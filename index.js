@@ -199,7 +199,7 @@ function fileSizeAllowed(data, maxSize = 200000){
                 log("maxSize: " + maxSize)
                 log(stats.size <= maxSize)
 
-                return isAllowed = stats.size <= maxSize
+                return stats.size <= maxSize
             }
         }
     )

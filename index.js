@@ -193,6 +193,7 @@ function fileSizeAllowed(data, maxSize = 200000, callback){
                         log("Error while deleting " + filePath + " : " + error)
                     }
                 })
+                log("returning calback for max file size check: " + stats.size <= maxSize)
                 return callback(stats.size <= maxSize)
             }
         }
@@ -216,12 +217,14 @@ async function evalSticker(message){
         message.downloadMedia().then((sticker) => {
 
             belowMaxFileSize = false
+            log("Checking filesize", message.from)
             fileSizeAllowed(sticker.data, CONFIG['max-sticker-size-in-bytes'], function(response){
                 if(!response){
                     client.sendMessage(message.from, "Der Sticker ist zu groß. Bitte sende keine Videos")
                 }
                 belowMaxFileSize = response
             })
+            log("Below FileSize: " + belowMaxFileSize, message.author)
             if(!belowMaxFileSize) return
 
 //	    log(JSON.stringify(sessions[message.from]))

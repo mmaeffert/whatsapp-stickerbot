@@ -9,9 +9,9 @@
     "allowed-number-of-messages-within-time-frame": 10,
     "sticker-file-owner-uid": 116,
     "sticker-file-owner-guid": 1005,
-    "max-sticker-size-in-bytes": 100000,
+    "max-sticker-size-in-bytes": 150000,
     "sticker-file-permission": "664",
     "admin-chat-id": "120363097236780893@g.us",
-    "last-announcement": "Moin! Bald geht unsere Website life auf stickem.shop. Dort bekommst du deine Whatsapp Sticker in Premium Qualität gedruckt und nach Hause geschickt",
+    "last-announcement": "Wir sind live!! Du kannst bei uns unter https://stickem.shop/sticker-bot/ deine Whatsapp Sticker drucken und in die echte welt bringen",
     "help-command": "Um Sticker deiner Bestellung hinzuzufügen, sende uns den 6-stelligen code, der dir auf der Website angezeigt wird. Danach kannst du die Sticker in den Chat spamen und sie werden deiner Bestellung zugeordnet. Keine Sorge, solltest du Sticker aus versehen geschickt haben, kannst du sie im nächsten Schritt auf der Website wieder entfernen\nhttps://stickem.shop"
 }
